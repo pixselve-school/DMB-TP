@@ -6,3 +6,8 @@ lazy val root = (project in file("."))
   .settings(
     name := "DMB-TP1"
   )
+
+libraryDependencies ++= Seq(
+  "org.apache.spark" %% "spark-core" % "3.5.0",
+  "org.apache.spark" %% "spark-graphx" % "3.5.0"
+)
