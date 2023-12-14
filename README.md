@@ -10,5 +10,5 @@ Sur Windows, on utilise :
 Get-Content agg_match_stats_0.csv -Head 100000 > agg_match_stats_0_100000.csv
 ```
 
-###  Les meilleurs joueurs
+###  3 - Les meilleurs joueurs
 
