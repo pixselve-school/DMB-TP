@@ -2,6 +2,8 @@ import org.apache.spark.graphx.{Edge, Graph, VertexId, VertexRDD}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
+import java.io.{File, PrintWriter}
+
 
 
 case class Station( id: String,  name: String,  latitude: Double, longitude: Double)
@@ -58,16 +60,32 @@ object Main {
     val sparkConf = new SparkConf().setAppName("graphXTP").setMaster("local[1]")
     val sc = new SparkContext(sparkConf)
 
+    val mdString = new StringBuilder // String to write to the file
+
+    mdString ++= "<h4 align=\"center\">Traitement du graphe temporel CityBike avec Spark-GraphX</h1>\n<h1 align=\"center\">Résultats générés</h4>\n\n"
+
+    val bikeGraph = part1(sc)
+
+    part2(mdString, bikeGraph)
+
+    part3(mdString, bikeGraph)
+
+    // Write the string to a file
+    val pw = new PrintWriter(new File("results.md" ))
+    pw.write(mdString.toString())
+    pw.close()
+
+  }
+
+  private def part1(sc: SparkContext): Graph[Station, Trip] = {
     val DATASET_PATH = "data/"
-
     val trips = sc.textFile(DATASET_PATH + "JC-202112-citibike-tripdata.csv")
-
     val tripProcessed = trips
       .mapPartitionsWithIndex { (idx, iter) => if (idx == 0) iter.drop(1) else iter }
       .filter(line => line.split(',').length == 13)
       .map(line => line.split(','))
 
-    // remove rows with missing values
+      // remove rows with missing values
       .filter(row => !row.contains(""))
 
     // Créez un graphe dont les noeuds représentent des stations de vélos et les relations représentent des trajets de vélos entre deux stations.
@@ -81,56 +99,101 @@ object Main {
       Edge(row(5).hashCode.toLong, row(7).hashCode.toLong, Trip(timeToLong(row(2)), timeToLong(row(3))))
     }
 
-    val bikeGraph = Graph(stations, tripsRDD)
+    Graph(stations, tripsRDD)
+  }
 
-    bikeGraph.vertices.collect()
-    bikeGraph.edges.collect()
+
+  private def part2(mdString: StringBuilder, bikeGraph: Graph[Station, Trip]): Unit = {
+    mdString ++= "# 2️⃣ Trajets entre le 05-12-2021 et le 25-12-2021\n"
+
 
     // Extrayez le sous-graphe dont les intervalles temporelles de ces trajets (relations) existent entre 05-12- 2021 et 25-12-2021. (subgraph)
     val subGraph = bikeGraph.subgraph(epred = e => e.attr.startTimestamp > timeToLong("2021-12-05 00:00:00") && e.attr.startTimestamp < timeToLong("2021-12-25 00:00:00"))
-    subGraph.triplets.foreach(t => println(s"🚴 ${t.srcAttr.name} -> ${t.dstAttr.name}"))
+
     // Calculez le nombre total de trajets entrants et sortants de chaque station et affichez les 10 stations ayant
     // plus de trajets sortants et ceux ayants plus de trajets entrants. (aggregateMessages)
-    val outDegreeVertexRDD: VertexRDD[Int] = subGraph.aggregateMessages[Int](
-      triplet => {
-        triplet.sendToDst(1)
-      },
-      (a, b) => (a + b)
+
+    // Calculate the total number of outgoing trips for each station
+    val outgoingTrips = subGraph.aggregateMessages[Int](
+      triplet => triplet.sendToSrc(1),
+      (a, b) => a + b
     )
 
-    val inDegreeVertexRDD: VertexRDD[Int] = subGraph.aggregateMessages[Int](
-      triplet => {
-        triplet.sendToSrc(1)
-      },
-      (a, b) => (a + b)
+    // Calculate the total number of incoming trips for each station
+    val incomingTrips = subGraph.aggregateMessages[Int](
+      triplet => triplet.sendToDst(1),
+      (a, b) => a + b
     )
 
-    // trajets sortants
-    outDegreeVertexRDD
-      .sortBy(_._2, ascending = false)
-      .take(10)
-      .map(t => s"${subGraph.vertices.filter(_._1 == t._1).first()._2.name} -> ${t._2}")
-      .foreach(println)
+    // Join with the stations RDD to get the station names
+    val outgoingTripsWithNames = outgoingTrips.join(subGraph.vertices)
+    val incomingTripsWithNames = incomingTrips.join(subGraph.vertices)
 
-    // trajets entrants
-    inDegreeVertexRDD
-      .sortBy(_._2, ascending = false)
-      .take(10)
-      .map(t => s"${t._2} -> ${subGraph.vertices.filter(_._1 == t._1).first()._2.name}")
-      .foreach(println)
+    // Get the top 10 stations with the most outgoing trips
+    val topOutgoingStations = outgoingTripsWithNames.sortBy(_._2._1, ascending = false).take(10)
 
-    // Trouvez et affichez la station la plus proche de la station JC013 tel que la distance du trajet (relation)
-    // entre les deux stations soit minimale. (aggregateMessage) (Pour le calcul de distance, utilisez la
-    // fonction getDistKilometers).
+    // Get the top 10 stations with the most incoming trips
+    val topIncomingStations = incomingTripsWithNames.sortBy(_._2._1, ascending = false).take(10)
 
-    val jc013 = bikeGraph.vertices.filter(_._2.id == "JC013").first()
+    mdString ++= "## ⬅️ Top 10 des stations avec le plus de trajets sortants:\n"
+    topOutgoingStations.foreach { case (_, (count, station)) =>
+      mdString ++= s"- Station **${station.name}**: **$count** trajets\n"
+    }
 
+    mdString ++= "## ➡️ Top 10 des stations avec le plus de trajets entrants:\n"
+    topIncomingStations.foreach { case (_, (count, station)) =>
+      mdString ++= s"- Station **${station.name}**: **$count** trajets\n"
+    }
+  }
 
+  private def part3(mdString: StringBuilder, bikeGraph: Graph[Station, Trip]): Unit = {
+  /*
+  1. Trouvez et affichez la station la plus proche de la station JC013 tel que la distance du trajet (relation) entre les deux stations soit minimale. (aggregateMessage)
+  (Pour le calcul de distance, utilisez la fonction getDistKilometers).
+   */
 
+    /*
+    2. Trouvez et affichez la station la plus proche de la station JC013 tel
+    que la durée du trajet (relation) entre les deux stations soit minimale. (aggregateMessage)
+     */
 
+    mdString ++= "# 3️⃣ Proximité entre les stations\n"
 
+    val JC013Id = "JC013".hashCode.toLong
 
+    // Calculate the distance and duration of trips from JC013 to all other stations
+    val tripDistancesAndDurations = bikeGraph.aggregateMessages[(Double, Long)](
+      triplet => {
+        if (triplet.srcId == JC013Id && triplet.dstId != JC013Id) {
+          val distance = getDistKilometers(
+            triplet.srcAttr.longitude, triplet.srcAttr.latitude,
+            triplet.dstAttr.longitude, triplet.dstAttr.latitude
+          )
+          val duration = triplet.attr.endTimestamps - triplet.attr.startTimestamp
+          triplet.sendToDst((distance, duration))
+        }
+      },
+      (a, b) => (Math.min(a._1, b._1), Math.min(a._2, b._2)) // Keep the minimum distance and duration
+    )
 
+    // Join with the stations RDD to get the station names
+    val tripDistancesAndDurationsWithNames = tripDistancesAndDurations.join(bikeGraph.vertices)
+
+    // Find the station with the minimum distance and duration
+    val minDistanceStation = tripDistancesAndDurationsWithNames.min()(Ordering.by(_._2._1._1))
+    val minDurationStation = tripDistancesAndDurationsWithNames.min()(Ordering.by(_._2._1._2))
+
+    // Convert duration from milliseconds to minutes
+    val minDurationInMinutes = minDurationStation._2._1._2 / 60000.0
+
+    // Print the results
+    mdString ++= s"\n## La station la plus proche de `JC013` par distance :\n- Station ${minDistanceStation._2._2.name}: ${minDistanceStation._2._1._1} km\n"
+    mdString ++= s"\n## La station la plus proche de `JC013` par durée de trajet :\n- Station ${minDurationStation._2._2.name}: $minDurationInMinutes ms\n"
+  }
+
+  private def part4(): Unit = {
 
   }
 }
+
+
