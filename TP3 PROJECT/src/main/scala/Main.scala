@@ -23,6 +23,33 @@ object Main {
     format.parse(tString).getTime
   }
 
+  /**
+   * Calculate the distance between two points in kilometers
+   * @param lngDegreeA : longitude of point A
+   * @param latDegreeA : latitude of point A
+   * @param lngDegreeB : longitude of point B
+   * @param latDegreeB : latitude of point B
+   * @return : distance in kilometers
+   */
+  private def getDistKilometers(lngDegreeA : Double, latDegreeA : Double, lngDegreeB : Double, latDegreeB: Double) : Double = {
+
+    val longRadiansA = Math.toRadians(lngDegreeA)
+    val latRadiansA = Math.toRadians(latDegreeA)
+    val longRadiansB = Math.toRadians(lngDegreeB)
+    val latRadiansB = Math.toRadians(latDegreeB)
+
+    val deltaLon = longRadiansB - longRadiansA
+    val deltaLat = latRadiansB - latRadiansA
+    val a = Math.pow(Math.sin(deltaLat / 2), 2) +
+      Math.cos(latRadiansA) *
+        Math.cos(latRadiansB) *
+        Math.pow(Math.sin(deltaLon / 2), 2)
+
+    val c = 2 * Math.asin(Math.sqrt(a))
+
+    val r = 6371 // Radius of earth in kilometers
+    c*r
+  }
 
   def main(args: Array[String]): Unit = {
     val sparkConf = new SparkConf().setAppName("graphXTP").setMaster("local[1]")
@@ -32,7 +59,7 @@ object Main {
 
     mdString ++= "<h4 align=\"center\">Traitement du graphe temporel CityBike avec Spark-GraphX</h1>\n<h1 align=\"center\">Résultats générés</h4>\n\n"
 
-    val bikeGraph = part1(sc)
+    val g = part1(sc)
 
     part2(mdString, bikeGraph)
 
@@ -45,9 +72,9 @@ object Main {
 
   }
 
-  private def part1(sc: SparkContext): Graph[Station, Trip] = {
-    val DATASET_PATH = "data/"
-    val trips = sc.textFile(DATASET_PATH + "JC-202112-citibike-tripdata.csv")
+  private def parseGraph(sc: SparkContext): Graph[Station, Trip] = {
+    val DATASET_PATH = "data/yellow_tripdata_2015-01.csv"
+    val trips = sc.textFile(DATASET_PATH)
     val tripProcessed = trips
       .mapPartitionsWithIndex { (idx, iter) => if (idx == 0) iter.drop(1) else iter }
       .filter(line => line.split(',').length == 13)
@@ -56,18 +83,6 @@ object Main {
       // remove rows with missing values
       .filter(row => !row.contains(""))
 
-    // Créez un graphe dont les noeuds représentent des stations de vélos et les relations représentent des trajets de vélos entre deux stations.
-    val stations: RDD[(VertexId, Station)] = tripProcessed.flatMap { row =>
-      val startStation = Station(row(5), row(4), row(8).toDouble, row(9).toDouble)
-      val endStation = Station(row(7), row(6), row(10).toDouble, row(11).toDouble)
-      List((row(5).hashCode.toLong, startStation), (row(7).hashCode.toLong, endStation))
-    }.distinct()
-
-    val tripsRDD: RDD[Edge[Trip]] = tripProcessed.map { row =>
-      Edge(row(5).hashCode.toLong, row(7).hashCode.toLong, Trip(timeToLong(row(2)), timeToLong(row(3))))
-    }
-
-    Graph(stations, tripsRDD)
   }
 
 
