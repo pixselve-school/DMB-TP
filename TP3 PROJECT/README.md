@@ -5,47 +5,79 @@
    <img src="https://img.shields.io/badge/-DMB-red" alt="DMB">
 </p>
 
+# Project
 
-## Résultats
+In this projet we will be analyzing the [NYC Yellow Taxi Trip Data](https://www.kaggle.com/datasets/elemento/nyc-yellow-taxi-trip-data)
 
-Les résultats pré-générés sont disponibles à [./results.md](results.md).
+## Dataset Columns
 
-Les instructions pour générer les résultats sont disponibles dans la section [Génération des résultats](#génération-des-résultats).
+| Field Name            | Description                                                                                                           |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| VendorID              | A code indicating the TPEP provider that provided the record.                                                         |
+| tpep_pickup_datetime  | The date and time when the meter was engaged.                                                                         |
+| tpep_dropoff_datetime | The date and time when the meter was disengaged.                                                                      |
+| Passenger_count       | The number of passengers in the vehicle. This is a driver-entered value.                                              |
+| Trip_distance         | The elapsed trip distance in miles reported by the taximeter.                                                         |
+| Pickup_longitude      | Longitude where the meter was engaged.                                                                                |
+| Pickup_latitude       | Latitude where the meter was engaged.                                                                                 |
+| RateCodeID            | The final rate code in effect at the end of the trip.                                                                 |
+| Store_and_fwd_flag    | This flag indicates whether the trip record was held in vehicle memory before sending to the vendor,                  |
+| Dropoff_longitude     | Longitude where the meter was disengaged.                                                                             |
+| Dropoff\_ latitude    | Latitude where the meter was disengaged.                                                                              |
+| Payment_type          | A numeric code signifying how the passenger paid for the trip.                                                        |
+| Fare_amount           | The time-and-distance fare calculated by the meter.                                                                   |
+| Extra                 | Miscellaneous extras and surcharges. Currently, this only includes. the $0.50 and $1 rush hour and overnight charges. |
+| MTA_tax               | 0.50 MTA tax that is automatically triggered based on the metered rate in use.                                        |
+| Improvement_surcharge | 0.30 improvement surcharge assessed trips at the flag drop. the improvement surcharge began being levied in 2015.     |
+| Tip_amount            | Tip amount - This field is automatically populated for credit card tips.Cash tips are not included.                   |
+| Tolls_amount          | Total amount of all tolls paid in trip.                                                                               |
+| Total_amount          | The total amount charged to passengers. Does not include cash tips.                                                   |
 
-## Génération des résultats
- 
-### Prérequis
+## Questions we want to answer
+
+Based on the dataset columns from the NYC Yellow Taxi Trip Data, here we choosed three questions of varying difficulty that we will explore using Apache Spark and Spark-GraphX:
+
+### Easy Question:
+**"What are the peak hours for taxi demand in NYC?"**
+- **Objective**: Identify the busiest hours during the day for taxi services.
+- **Approach**: Aggregate `tpep_pickup_datetime` by hour and count the number of trips in each hour slot. Use Spark SQL for time-based aggregations.
+
+### Medium Question:
+**"How does the average trip distance vary by time of day and day of the week?"**
+- **Objective**: Understand trip distance patterns in relation to the time of the day and the day of the week.
+- **Approach**: 
+    - Extract hour and weekday from `tpep_pickup_datetime`.
+    - Group data by the extracted hour and weekday, and then calculate the average `Trip_distance` for each group.
+    - Analyze variations and trends in trip distance across different times of the day and days of the week.
+  
+### Hard Question (Involving Spark-GraphX):
+**"Can we identify communities/clusters of locations that are commonly connected through taxi trips?"**
+- **Objective**: Discover clusters of locations that are frequently connected through taxi trips, which might indicate shared functional or social connections.
+- **Approach**:
+    - Construct a graph where nodes represent unique locations (geocoordinates rounded to a specific precision) and edges represent trips between these locations.
+    - Use the pickup and dropoff latitude and longitude to define the nodes and the trips between these nodes as edges.
+    - Apply graph clustering algorithms available in Spark-GraphX, like Label Propagation or Strongly Connected Components, to identify communities/clusters of locations.
+    - Analyze the characteristics of these clusters, like their geographical spread, average trip distance, average fare, etc.
+
+Each of these questions increases in complexity, requiring more sophisticated data processing and analysis techniques. While the easy question involves basic data aggregation, the medium question adds the complexity of temporal data analysis. The hard question leverages the advanced graph processing capabilities of Spark-GraphX, enabling the exploration of complex relationships and patterns in the data.
+
+
+## Results
+
+Results are available here: [./results.md](results.md).
+
+## Generate the results
+
+### Requirements
 
 - Java
 - Scala
 - SBT
 
-### Lancer le projet
+### Start the project
 
 ```bash
-export JAVA_OPTS='--add-exports java.base/sun.nio.ch=ALL-UNNAMED'
 sbt run
 ```
 
-Le résultat est disponible dans le fichier `results.md`.
-
-
-#### `cannot access class sun.nio.ch.DirectBuffer`[^1]
-
-> If you are using IntelliJ IDEA, this is based on @Anil Reddaboina's answer, and thanks!
-> 
-> This adds more info as I don't have that "VM Options" field by default.
-> 
-> Follow this:
-> 
-> ![](https://i.stack.imgur.com/1DYAA.png)
-> 
-> Then you should be able to add `--add-exports java.base/sun.nio.ch=ALL-UNNAMED` to "VM Options" field.
-> 
-> or add fully necessary VM Options arguments:
-> 
-> ```
-> --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/sun.nio.cs=ALL-UNNAMED --add-opens=java.base/sun.security.action=ALL-UNNAMED --add-opens=java.base/sun.util.calendar=ALL-UNNAMED --add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED
-> ```
-
-[^1]: https://stackoverflow.com/questions/73465937/apache-spark-3-3-0-breaks-on-java-17-with-cannot-access-class-sun-nio-ch-direct
+This will generate the results of the analysis in the `results.md` file.
