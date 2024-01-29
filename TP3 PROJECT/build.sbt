@@ -4,7 +4,7 @@ ThisBuild / scalaVersion := "2.13.12"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "DMB-TP2"
+    name := "DMB-TP3"
   )
 
 libraryDependencies ++= Seq(
