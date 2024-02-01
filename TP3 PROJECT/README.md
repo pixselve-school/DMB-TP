@@ -26,6 +26,8 @@
 
 In this projet we will be analyzing the [NYC Yellow Taxi Trip Data](https://www.kaggle.com/datasets/elemento/nyc-yellow-taxi-trip-data)
 
+We will be using a small subset of the data with the 500000 first rows of the dataset of 2015.
+
 ## Dataset Columns
 
 | Field Name            | Description                                                                                                           |
@@ -212,6 +214,8 @@ Results are available here: [./results.md](results.md).
 
 ## Generate the results
 
+The scala source code is available at [`src/main/scala/Main.scala`](./src/main/scala/Main.scala).
+
 ### Requirements
 
 - Java
@@ -225,3 +229,5 @@ sbt run
 ```
 
 This will generate the results of the analysis in the `results.md` file.
+
+To generate the plots, you need to run the python file `plotX.py` corresponding to the question X.
