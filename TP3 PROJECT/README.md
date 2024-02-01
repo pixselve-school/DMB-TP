@@ -23,7 +23,7 @@ In this projet we will be analyzing the [NYC Yellow Taxi Trip Data](https://www.
 | RateCodeID            | The final rate code in effect at the end of the trip.                                                                 |
 | Store_and_fwd_flag    | This flag indicates whether the trip record was held in vehicle memory before sending to the vendor,                  |
 | Dropoff_longitude     | Longitude where the meter was disengaged.                                                                             |
-| Dropoff\_ latitude    | Latitude where the meter was disengaged.                                                                              |
+| Dropoff_latitude      | Latitude where the meter was disengaged.                                                                              |
 | Payment_type          | A numeric code signifying how the passenger paid for the trip.                                                        |
 | Fare_amount           | The time-and-distance fare calculated by the meter.                                                                   |
 | Extra                 | Miscellaneous extras and surcharges. Currently, this only includes. the $0.50 and $1 rush hour and overnight charges. |
@@ -38,26 +38,44 @@ In this projet we will be analyzing the [NYC Yellow Taxi Trip Data](https://www.
 Based on the dataset columns from the NYC Yellow Taxi Trip Data, here we choosed three questions of varying difficulty that we will explore using Apache Spark and Spark-GraphX:
 
 ### Easy Question:
+
 **"What are the peak hours for taxi demand in NYC?"**
+
 - **Objective**: Identify the busiest hours during the day for taxi services.
 - **Approach**: Aggregate `tpep_pickup_datetime` by hour and count the number of trips in each hour slot. Use Spark SQL for time-based aggregations.
 
 ### Medium Question:
+
 **"How does the average trip distance vary by time of day and day of the week?"**
+
 - **Objective**: Understand trip distance patterns in relation to the time of the day and the day of the week.
-- **Approach**: 
-    - Extract hour and weekday from `tpep_pickup_datetime`.
-    - Group data by the extracted hour and weekday, and then calculate the average `Trip_distance` for each group.
-    - Analyze variations and trends in trip distance across different times of the day and days of the week.
-  
+- **Approach**:
+  - Extract hour and weekday from `tpep_pickup_datetime`.
+  - Group data by the extracted hour and weekday, and then calculate the average `Trip_distance` for each group.
+  - Analyze variations and trends in trip distance across different times of the day and days of the week.
+
 ### Hard Question (Involving Spark-GraphX):
+
 **"Can we identify communities/clusters of locations that are commonly connected through taxi trips?"**
+
 - **Objective**: Discover clusters of locations that are frequently connected through taxi trips, which might indicate shared functional or social connections.
 - **Approach**:
-    - Construct a graph where nodes represent unique locations (geocoordinates rounded to a specific precision) and edges represent trips between these locations.
-    - Use the pickup and dropoff latitude and longitude to define the nodes and the trips between these nodes as edges.
-    - Apply graph clustering algorithms available in Spark-GraphX, like Label Propagation or Strongly Connected Components, to identify communities/clusters of locations.
-    - Analyze the characteristics of these clusters, like their geographical spread, average trip distance, average fare, etc.
+  - Construct a graph where nodes represent unique locations (geocoordinates rounded to a specific precision) and edges represent trips between these locations.
+  - Use the pickup and dropoff latitude and longitude to define the nodes and the trips between these nodes as edges.
+  - Apply graph clustering algorithms available in Spark-GraphX, like Label Propagation or Strongly Connected Components, to identify communities/clusters of locations.
+  - Analyze the characteristics of these clusters, like their geographical spread, average trip distance, average fare, etc.
+
+
+we aim to identify communities or clusters of locations that are commonly connected through taxi trips. We can use graph clustering algorithms available in Spark-GraphX, like Label Propagation or Strongly Connected Components, to identify these communities.
+
+Below is the outline of the code to achieve this, with the focus on using the Label Propagation Algorithm (LPA) for community detection:
+
+1. Objective and Approach Description: Describe the aim of the analysis and the method used.
+2. Apply LPA: Use the Label Propagation Algorithm on the graph to identify communities.
+3. Analyze Clusters: Aggregate data in the clusters, such as average trip distance, average fare, etc.
+4. Generate Results: Format the results into a readable format.
+
+
 
 Each of these questions increases in complexity, requiring more sophisticated data processing and analysis techniques. While the easy question involves basic data aggregation, the medium question adds the complexity of temporal data analysis. The hard question leverages the advanced graph processing capabilities of Spark-GraphX, enabling the exploration of complex relationships and patterns in the data.
 

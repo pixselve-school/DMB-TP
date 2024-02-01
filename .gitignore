@@ -1,3 +1,7 @@
 .idea
 .sbt
 **/data/*.csv
+.metals
+target
+.bloop
+.vscode
