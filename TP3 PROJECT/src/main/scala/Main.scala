@@ -216,7 +216,7 @@ We summarize the data in the following table:
     // Prepare table header
     val tableHeader = "| Hour | " + daysOfWeek.mkString(
       " | "
-    ) + " |\n" + ("--- | " * (daysOfWeek.size + 1)) + " |\n"
+    ) + " |\n| " + ("--- | " * (daysOfWeek.size + 1)) + "\n"
 
     // Prepare table body
     val tableBody = hoursOfDay
@@ -229,7 +229,7 @@ We summarize the data in the following table:
             f"${dataMap.getOrElse(key, 0.0)}%.2f"
           }
           .mkString(" | ")
-        s"$hour | " + rowData
+        s"$hour:00 | " + rowData
       }
       .mkString("\n")
 
@@ -296,8 +296,8 @@ This table shows the average trip distance in Km for each hour of the day and ea
         (totalDistance / tripCount, totalFare / tripCount, tripCount)
       }
 
-    // Collecting and sorting the results
-    val sortedResults = statsByCommunity.collect().sortBy(_._1)
+    // Collecting and sorting the results by number of trips
+    val sortedResults = statsByCommunity.collect().sortBy(_._2._3).reverse
 
     // Formatting the results
     val intro = """
@@ -312,18 +312,28 @@ This table shows the average trip distance in Km for each hour of the day and ea
   - Analyze the characteristics of these clusters, such as their geographical spread, average trip distance, average fare, etc.
 
 We summarize the data in the following table:
-  
+
 """
 
     val tableHeader =
       "| Community ID | Average Trip Distance | Average Fare | Number of Trips |\n| ------------- | --------------------- | ------------ | --------------- |\n"
 
-    val tableBody = sortedResults
+    // only show the top 20 first communities
+    val tableBodyTop = sortedResults
+      .take(20)
       .map { case (communityId, (avgDistance, avgFare, tripCount)) =>
         f"| $communityId | $avgDistance%.2f | $avgFare%.2f | $tripCount |"
       }
       .mkString("\n")
 
-    intro + tableHeader + tableBody + "\n\n"
+    // only show the last 20 communities
+    val tableBodyBottom = sortedResults
+      .takeRight(20)
+      .map { case (communityId, (avgDistance, avgFare, tripCount)) =>
+        f"| $communityId | $avgDistance%.2f | $avgFare%.2f | $tripCount |"
+      }
+      .mkString("\n")
+
+    intro + tableHeader + tableBodyTop + "\n| ... | ... | ... | ... |\n" + tableBodyBottom + "\n\n"
   }
 }

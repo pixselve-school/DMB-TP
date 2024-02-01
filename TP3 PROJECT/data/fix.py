@@ -10,13 +10,13 @@ script_directory = Path(__file__).parent
 # Construct the absolute path to the file
 file_path = script_directory / relative_path_to_script
 
-# Task: Lower the number of lines to 100000
+# Task: Lower the number of lines to 500000
 with open(file_path, 'r') as file:
     lines = file.readlines()
 
-# Writing the first 100000 lines to a new file in the script's directory
+# Writing the first 500000 lines to a new file in the script's directory
 with open(script_directory / "yellow_tripdata_2015-01-small.csv", 'w') as new_file:
-    for line in lines[:100000]:
+    for line in lines[:500000]:
         new_file.write(line)
 
-print(f"File has been reduced to {len(lines[:100000])} lines.")
+print(f"File has been reduced to {len(lines[:500000])} lines.")
