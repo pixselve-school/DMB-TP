@@ -5,7 +5,7 @@ markdown = """
 | Hour  | Mon  | Tue  | Wed  | Thu  | Fri  | Sat   | Sun   |
 | ----- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
 | 0:00  | 2.87 | 3.59 | 3.98 | 3.79 | 3.37 | 3.46  | 3.12  |
-| 1:00  | 2.92 | 3.83 | 3.72 | 3.12 | 3.21 | 3.29  | 11.27 |
+| 1:00  | 2.92 | 3.83 | 3.72 | 3.12 | 3.21 | 3.29  | 3.11 |
 | 2:00  | 3.22 | 3.78 | 3.36 | 3.75 | 3.40 | 3.39  | 3.11  |
 | 3:00  | 3.27 | 3.99 | 0.00 | 3.39 | 3.37 | 3.51  | 3.25  |
 | 4:00  | 3.91 | 5.25 | 4.01 | 4.73 | 3.88 | 4.29  | 3.62  |
@@ -13,7 +13,7 @@ markdown = """
 | 6:00  | 5.51 | 4.06 | 2.99 | 3.02 | 3.14 | 3.49  | 4.49  |
 | 7:00  | 3.76 | 2.99 | 2.55 | 2.69 | 2.77 | 2.72  | 3.45  |
 | 8:00  | 3.04 | 2.54 | 2.32 | 2.23 | 2.30 | 2.35  | 3.00  |
-| 9:00  | 2.65 | 2.48 | 2.28 | 2.32 | 2.38 | 25.61 | 2.44  |
+| 9:00  | 2.65 | 2.48 | 2.28 | 2.32 | 2.38 | 2.4 | 2.44  |
 | 10:00 | 2.63 | 2.57 | 2.38 | 2.36 | 2.39 | 2.42  | 2.35  |
 | 11:00 | 2.51 | 2.66 | 2.33 | 2.43 | 2.50 | 2.49  | 2.46  |
 | 12:00 | 2.61 | 2.42 | 2.41 | 2.49 | 2.59 | 2.56  | 2.25  |
@@ -34,35 +34,8 @@ data = markdown.split('\n')[3:-1]
 data = [row.split('|')[2:-1] for row in data]
 data = [[float(x) for x in row] for row in data]
 
-
-
-# Data from the 2D table
-data = [
-    [2.68, 3.44, 4.20, 3.73, 3.49, 3.30, 3.16],
-    [3.06, 3.50, 3.75, 2.77, 3.10, 3.23, 3.02],
-    [3.39, 3.82, 3.54, 3.29, 3.46, 2.97, 3.08],
-    [3.11, 3.97, 0.00, 4.13, 3.54, 3.71, 2.95],
-    [4.04, 5.39, 0.00, 3.74, 3.40, 4.49, 3.61],
-    [4.58, 6.99, 4.32, 4.22, 3.39, 5.06, 4.56],
-    [5.19, 4.21, 3.32, 2.99, 3.20, 3.40, 5.24],
-    [3.80, 2.85, 2.63, 2.66, 2.74, 2.66, 3.52],
-    [2.78, 2.76, 2.18, 2.16, 2.42, 2.36, 3.25],
-    [2.90, 2.54, 2.20, 2.40, 2.30, 2.41, 2.46],
-    [2.59, 2.57, 2.32, 2.37, 2.46, 2.41, 2.35],
-    [2.47, 2.69, 2.31, 2.30, 2.53, 2.29, 2.24],
-    [2.60, 2.45, 2.48, 2.42, 2.43, 2.59, 2.28],
-    [2.53, 2.47, 2.32, 2.68, 2.56, 2.65, 2.46],
-    [2.97, 2.76, 2.75, 2.82, 3.01, 3.07, 2.40],
-    [2.99, 3.35, 2.46, 2.75, 2.87, 2.82, 2.58],
-    [2.89, 3.10, 2.39, 2.90, 2.60, 2.91, 2.58],
-    [2.82, 2.57, 2.30, 2.37, 2.58, 2.54, 2.64],
-    [3.12, 2.93, 2.31, 2.54, 2.69, 2.38, 2.33],
-    [3.04, 2.72, 2.43, 2.58, 2.41, 2.40, 2.43],
-    [2.72, 3.00, 2.86, 2.68, 3.19, 2.60, 2.34],
-    [3.15, 2.92, 3.00, 2.82, 3.06, 2.69, 2.51],
-    [3.42, 3.76, 3.09, 3.13, 3.07, 2.78, 2.47],
-    [3.87, 3.84, 3.39, 3.26, 3.29, 3.20, 2.78]
-]
+# remove outliers <2 and >10
+data = [[x if x > 2 and x < 10 else 0 for x in row] for row in data]
 
 days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 hours = list(range(24))
@@ -70,15 +43,24 @@ hours = list(range(24))
 # Convert the data to a 2D numpy array
 data_array = np.array(data)
 
-# Create the heatmap again with the corrected title
+# Plot the heatmap with values inside the boxes
 plt.figure(figsize=(10, 8))
-plt.imshow(data_array, cmap='viridis', aspect='auto')
-plt.colorbar(label='Values')
+heatmap = plt.imshow(data_array, cmap='viridis', aspect='auto')
+
+plt.colorbar(heatmap, label='Values')
 
 # Setting the labels
 plt.xticks(ticks=np.arange(len(days)), labels=days)
 plt.yticks(ticks=np.arange(len(hours)), labels=hours)
 plt.xlabel('Days')
 plt.ylabel('Hour')
-plt.title('Average distribution of taxi demand per hour and day')
+plt.title('Weekly Data Heatmap')
+
+# Adding the values inside the boxes with low opacity white
+for i in range(len(hours)):
+    for j in range(len(days)):
+        text = plt.text(j, i, f"{data_array[i, j]:.2f}",
+                       ha="center", va="center", color="w", fontsize=10, alpha=0.5)
+
+plt.title('Average distribution of taxi trip distance per hour and day')
 plt.show()

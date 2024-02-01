@@ -5,6 +5,23 @@
    <img src="https://img.shields.io/badge/-DMB-red" alt="DMB">
 </p>
 
+- [Project](#project)
+  - [Dataset Columns](#dataset-columns)
+  - [Questions we want to answer](#questions-we-want-to-answer)
+    - [Easy Question:](#easy-question)
+      - [Results](#results)
+      - [Observations](#observations)
+    - [Medium Question:](#medium-question)
+      - [Results](#results-1)
+      - [Observations](#observations-1)
+    - [Hard Question (Involving Spark-GraphX):](#hard-question-involving-spark-graphx)
+      - [Results](#results-2)
+      - [Observations](#observations-2)
+  - [Results](#results-3)
+  - [Generate the results](#generate-the-results)
+    - [Requirements](#requirements)
+    - [Start the project](#start-the-project)
+
 # Project
 
 In this projet we will be analyzing the [NYC Yellow Taxi Trip Data](https://www.kaggle.com/datasets/elemento/nyc-yellow-taxi-trip-data)
@@ -47,6 +64,8 @@ Based on the dataset columns from the NYC Yellow Taxi Trip Data, here we choosed
 #### Results
 
 See [./results.md](results.md) for the results of the analysis.
+
+![plot](image.png)
 
 #### Observations
 
@@ -91,6 +110,9 @@ In conclusion, the data provides a clear depiction of the city's pulse, reflecti
 #### Results
 
 See [./results.md](results.md) for the results of the analysis.
+
+
+![plot](image-1.png)
 
 #### Observations
 
