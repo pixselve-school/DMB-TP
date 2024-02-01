@@ -1,4 +1,4 @@
-<h1 align="center">Traitement du graphe temporel CityBike avec Spark-GraphX</h1>
+<h1 align="center">Analysis of the graph with NYC Yellow Taxi Trip Data using Spark-GraphX</h1>
 <h4 align="center">Mael KERICHARD - Cody ADAM</h4>
 <p align="center">
    <img src="https://img.shields.io/badge/-ESIR-orange" alt="ESIR">
